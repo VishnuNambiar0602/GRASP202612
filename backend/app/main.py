@@ -139,7 +139,7 @@ def parse_gemini_response(response_text: str) -> GeminiTriageOutput:
     
     try:
         # Try to extract JSON from code blocks if present
-        json_match = re.search(r'```json\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+        json_match = re.search(r'```(?:[a-zA-Z]+)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
         if json_match:
             response_text = json_match.group(1)
             logger.info("Extracted JSON from code block")
@@ -196,7 +196,7 @@ def analyze_triage_with_gemini(symptoms: str, image_url: Optional[str] = None) -
     """
     try:
         # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Prepare prompt
         prompt = TRIAGE_SYSTEM_PROMPT.format(symptoms=symptoms)
