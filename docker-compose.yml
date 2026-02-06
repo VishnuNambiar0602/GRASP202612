@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: triageflow-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MATS_API_ENDPOINT=${MATS_API_ENDPOINT:-https://api.mats.uthishta.com/dispatch}
+      - MATS_API_KEY=${MATS_API_KEY:-}
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/app:/app/app  # Hot-reload for development
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - triageflow-network
+
+  # Frontend Dashboard Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: triageflow-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - triageflow-network
+
+networks:
+  triageflow-network:
+    driver: bridge
+
+# Optional: For production logging and monitoring
+# volumes:
+#   logs:
+#     driver: local
